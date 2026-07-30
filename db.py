@@ -2,7 +2,6 @@ import psycopg2
 import bcrypt
 
 DB_URL = ""
-
 def get_conn():
     return psycopg2.connect(DB_URL)
 
