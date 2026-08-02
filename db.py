@@ -1,14 +1,20 @@
 import psycopg2
 import bcrypt
+import os
+from dotenv import load_dotenv
 
-DB_URL = ""
+load_dotenv()
 
 def get_conn():
-    return psycopg2.connect(DB_URL)
+    # Connect directly to the Supabase PostgreSQL server.
+    return psycopg2.connect(os.environ.get("SUPABASE_DB_URI"))
 
 def init_db():
     conn = get_conn()
+    conn.autocommit = True
     cur = conn.cursor()
+    
+    # Create table if not exists with PostgreSQL syntax
     cur.execute("""
         CREATE TABLE IF NOT EXISTS users (
             id SERIAL PRIMARY KEY,
@@ -18,7 +24,32 @@ def init_db():
             created TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
     """)
-    conn.commit()
+    cur.execute(
+        """
+        CREATE TABLE IF NOT EXISTS transactions (
+            id SERIAL PRIMARY KEY,
+            user_id INT NOT NULL,
+            amount DECIMAL(10,2) NOT NULL,
+            type VARCHAR(20) NOT NULL,
+            category VARCHAR(50) NOT NULL,
+            date DATE NOT NULL,
+            description TEXT,
+            payment_mode VARCHAR(50),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+        );
+        """
+    )
+    
+    # Auto-migration checks for existing databases
+    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='transactions' AND column_name='payment_mode';")
+    if not cur.fetchone():
+        cur.execute("ALTER TABLE transactions ADD COLUMN payment_mode VARCHAR(50) DEFAULT 'Cash';")
+        
+    cur.execute("SELECT column_name FROM information_schema.columns WHERE table_name='transactions' AND column_name='created_at';")
+    if not cur.fetchone():
+        cur.execute("ALTER TABLE transactions ADD COLUMN created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP;")
+
     cur.close()
     conn.close()
 
