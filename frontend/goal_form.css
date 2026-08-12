@@ -1,0 +1,271 @@
+/* ============================================================
+   FinSight Financial Goal Planning Module - Goal Form CSS
+   File: static/css/goal_form.css
+   ============================================================ */
+
+.form-page-wrapper {
+    max-width: 820px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+}
+
+.form-navigation-row {
+    display: flex;
+    align-items: center;
+}
+
+.btn-back-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--color-navy);
+    font-weight: 600;
+    font-size: 0.95rem;
+    text-decoration: none;
+    transition: var(--transition-fast);
+}
+
+.btn-back-link:hover {
+    color: var(--color-gold-hover);
+    transform: translateX(-3px);
+}
+
+.form-card {
+    background: var(--bg-glass-card);
+    backdrop-filter: var(--glass-backdrop-filter);
+    border: var(--border-glass);
+    border-radius: var(--radius-xl);
+    padding: 2.5rem;
+    box-shadow: var(--shadow-modal);
+}
+
+.form-card-header {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding-bottom: 1.5rem;
+    border-bottom: 1px solid var(--color-border);
+    margin-bottom: 2rem;
+}
+
+.form-header-badge {
+    width: 54px;
+    height: 54px;
+    border-radius: var(--radius-lg);
+    background: linear-gradient(135deg, var(--color-navy) 0%, var(--color-emerald) 100%);
+    color: var(--color-gold);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    box-shadow: 0 6px 18px rgba(17, 24, 32, 0.15);
+}
+
+.form-card-title {
+    font-family: var(--font-heading);
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--color-navy);
+    line-height: 1.2;
+}
+
+.form-card-subtitle {
+    font-size: 0.95rem;
+    color: var(--color-text-muted);
+    margin-top: 0.25rem;
+}
+
+/* Error Summary Banner */
+.form-error-banner {
+    background-color: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    margin-bottom: 2rem;
+    color: #991B1B;
+}
+
+.banner-title {
+    font-weight: 700;
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+}
+
+.banner-error-list {
+    margin-left: 1.5rem;
+    font-size: 0.9rem;
+}
+
+/* Luxury Form Grid */
+.luxury-form {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+}
+
+.form-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+}
+
+.form-group-full {
+    grid-column: span 2;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+}
+
+.form-label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--color-navy);
+}
+
+.required-star {
+    color: #DC2626;
+}
+
+/* Input icon wrappers */
+.input-icon-wrapper, .select-field-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.input-field-icon {
+    position: absolute;
+    left: 1rem;
+    color: var(--color-text-light);
+    font-size: 1rem;
+    pointer-events: none;
+    transition: var(--transition-fast);
+}
+
+.form-control {
+    width: 100%;
+    padding: 0.8rem 1rem 0.8rem 2.75rem;
+    font-family: var(--font-body);
+    font-size: 0.95rem;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-lg);
+    background: var(--color-white);
+    color: var(--color-navy);
+    outline: none;
+    transition: var(--transition-normal);
+}
+
+.form-control:focus {
+    border-color: var(--color-gold);
+    box-shadow: 0 0 0 4px var(--color-gold-soft);
+}
+
+.form-control:focus + .input-field-icon,
+.input-icon-wrapper:focus-within .input-field-icon {
+    color: var(--color-gold-hover);
+}
+
+.form-select {
+    appearance: none;
+    -webkit-appearance: none;
+    cursor: pointer;
+    padding-right: 2.5rem;
+}
+
+.select-arrow {
+    position: absolute;
+    right: 1rem;
+    color: var(--color-text-muted);
+    font-size: 0.85rem;
+    pointer-events: none;
+}
+
+.form-textarea {
+    padding: 0.8rem 1rem;
+    resize: vertical;
+    min-height: 90px;
+}
+
+/* Inline Error Messaging */
+.inline-error {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: #DC2626;
+    min-height: 1.2rem;
+    display: block;
+}
+
+.form-control.input-error {
+    border-color: #EF4444;
+    background-color: rgba(239, 68, 68, 0.03);
+}
+
+/* Live Calculations Preview Box */
+.preview-panel {
+    background: linear-gradient(135deg, rgba(14, 90, 78, 0.05) 0%, rgba(168, 134, 75, 0.08) 100%);
+    border: 1px solid rgba(168, 134, 75, 0.25);
+    border-radius: var(--radius-lg);
+    padding: 1.25rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.preview-panel-title {
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--color-emerald);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.preview-panel-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+.preview-box {
+    background: var(--color-white);
+    padding: 0.85rem 1rem;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--color-border);
+    display: flex;
+    flex-direction: column;
+}
+
+.preview-label {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--color-text-muted);
+}
+
+.preview-value {
+    font-family: var(--font-title);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--color-navy);
+    margin-top: 0.15rem;
+}
+
+/* Form Action Buttons */
+.form-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 1rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid var(--color-border);
+}
+
+.btn-spinner {
+    margin-right: 0.35rem;
+}

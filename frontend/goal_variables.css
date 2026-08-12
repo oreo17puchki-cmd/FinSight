@@ -1,0 +1,64 @@
+/* ============================================================
+   FinSight Financial Goal Planning Module - Design Variables
+   File: static/css/goal_variables.css
+   ============================================================ */
+
+:root {
+    /* Primary Brand Colors */
+    --color-cream-bg: #F3F2EB;
+    --color-navy: #111820;
+    --color-navy-light: #1E293B;
+    --color-emerald: #0E5A4E;
+    --color-emerald-light: #147A6A;
+    --color-emerald-soft: rgba(14, 90, 78, 0.08);
+    --color-gold: #A8864B;
+    --color-gold-hover: #90713A;
+    --color-gold-soft: rgba(168, 134, 75, 0.12);
+    --color-white: #FFFFFF;
+
+    /* Status Colors */
+    --color-status-completed: #10B981;
+    --color-status-completed-bg: rgba(16, 185, 129, 0.12);
+    --color-status-progress: #0E5A4E;
+    --color-status-progress-bg: rgba(14, 90, 78, 0.12);
+    --color-status-overdue: #EF4444;
+    --color-status-overdue-bg: rgba(239, 68, 68, 0.12);
+
+    /* Neutral Text & Border Colors */
+    --color-text-main: #374151;
+    --color-text-heading: #111820;
+    --color-text-muted: #6B7280;
+    --color-text-light: #9CA3AF;
+    --color-border: #E7E5DD;
+    --color-border-hover: #C8C4B7;
+
+    /* Glassmorphism & Card Tokens */
+    --bg-glass-card: rgba(255, 255, 255, 0.78);
+    --bg-glass-modal: rgba(255, 255, 255, 0.92);
+    --glass-backdrop-filter: blur(18px) saturate(180%);
+    --border-glass: 1px solid rgba(255, 255, 255, 0.6);
+
+    /* Typography Families */
+    --font-heading: 'Playfair Display', Georgia, serif;
+    --font-title: 'Poppins', -apple-system, BlinkMacSystemFont, sans-serif;
+    --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+    /* Corner Radii */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 16px;
+    --radius-xl: 20px;
+    --radius-full: 9999px;
+
+    /* Luxury Drop Shadows */
+    --shadow-subtle: 0 4px 12px rgba(17, 24, 32, 0.03);
+    --shadow-card: 0 10px 30px rgba(17, 24, 32, 0.05);
+    --shadow-hover: 0 16px 40px rgba(17, 24, 32, 0.10);
+    --shadow-modal: 0 25px 60px rgba(17, 24, 32, 0.18);
+    --shadow-gold: 0 8px 24px rgba(168, 134, 75, 0.25);
+
+    /* Transitions & Easing */
+    --transition-fast: 0.15s ease;
+    --transition-normal: 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-bounce: 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+}

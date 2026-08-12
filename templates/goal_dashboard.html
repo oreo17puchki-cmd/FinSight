@@ -1,0 +1,423 @@
+{% extends "goal_base.html" %}
+
+{% block title %}FinSight - Financial Goal Planning Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+
+    <!-- Database Warning Banner (if PostgreSQL connection is missing/loading) -->
+    {% if db_error %}
+    <div class="db-warning-banner">
+        <i class="fa-solid fa-triangle-exclamation"></i>
+        <span>{{ db_error }}</span>
+    </div>
+    {% endif %}
+
+    <!-- 1. HEADER SECTION -->
+    <header class="dashboard-header">
+        <div class="header-main-info">
+            <div class="header-date-badge">
+                <i class="fa-regular fa-calendar-days"></i>
+                <span id="dashboard-date">{{ today_date }}</span>
+            </div>
+            <h1 class="dashboard-title">Plan Your Financial Goals</h1>
+            <p class="dashboard-subtitle">Set your goals. Track your progress. Build your future.</p>
+        </div>
+        <div class="header-action">
+            <a href="{{ url_for('goal.create_form') }}" class="btn btn-gold btn-lg" id="create-goal-header-btn">
+                <i class="fa-solid fa-plus"></i> Create New Goal
+            </a>
+        </div>
+    </header>
+
+    <!-- 2. LUXURY MOTIVATIONAL QUOTE -->
+    <section class="quote-card">
+        <div class="quote-icon"><i class="fa-solid fa-quote-left"></i></div>
+        <div class="quote-text">
+            <p>"Small steps today create a financially secure tomorrow."</p>
+            <span class="quote-author">— FinSight Wealth Philosophy</span>
+        </div>
+    </section>
+
+    <!-- 3. DYNAMIC SUMMARY CARDS SECTION -->
+    <section class="summary-grid" id="summary-cards-section">
+        <!-- Total Goals -->
+        <div class="summary-card">
+            <div class="summary-card-icon summary-icon-total">
+                <i class="fa-solid fa-bullseye"></i>
+            </div>
+            <div class="summary-card-info">
+                <span class="summary-card-label">Total Goals</span>
+                <h3 class="summary-card-value" id="summary-total-goals">{{ summary.total_goals }}</h3>
+            </div>
+        </div>
+
+        <!-- Active Goals -->
+        <div class="summary-card">
+            <div class="summary-card-icon summary-icon-active">
+                <i class="fa-solid fa-spinner fa-spin-pulse"></i>
+            </div>
+            <div class="summary-card-info">
+                <span class="summary-card-label">Active Goals</span>
+                <h3 class="summary-card-value" id="summary-active-goals">{{ summary.active_goals }}</h3>
+            </div>
+        </div>
+
+        <!-- Completed Goals -->
+        <div class="summary-card">
+            <div class="summary-card-icon summary-icon-completed">
+                <i class="fa-solid fa-circle-check"></i>
+            </div>
+            <div class="summary-card-info">
+                <span class="summary-card-label">Completed Goals</span>
+                <h3 class="summary-card-value" id="summary-completed-goals">{{ summary.completed_goals }}</h3>
+            </div>
+        </div>
+
+        <!-- Total Target Amount -->
+        <div class="summary-card">
+            <div class="summary-card-icon summary-icon-target">
+                <i class="fa-solid fa-vault"></i>
+            </div>
+            <div class="summary-card-info">
+                <span class="summary-card-label">Total Target</span>
+                <h3 class="summary-card-value" id="summary-total-target">₹{{ "{:,.2f}".format(summary.total_target_amount) }}</h3>
+            </div>
+        </div>
+
+        <!-- Total Saved Amount -->
+        <div class="summary-card">
+            <div class="summary-card-icon summary-icon-saved">
+                <i class="fa-solid fa-piggy-bank"></i>
+            </div>
+            <div class="summary-card-info">
+                <span class="summary-card-label">Total Saved</span>
+                <h3 class="summary-card-value" id="summary-total-saved">₹{{ "{:,.2f}".format(summary.total_saved_amount) }}</h3>
+            </div>
+        </div>
+
+        <!-- Total Remaining Amount -->
+        <div class="summary-card">
+            <div class="summary-card-icon summary-icon-remaining">
+                <i class="fa-solid fa-hourglass-half"></i>
+            </div>
+            <div class="summary-card-info">
+                <span class="summary-card-label">Total Remaining</span>
+                <h3 class="summary-card-value" id="summary-total-remaining">₹{{ "{:,.2f}".format(summary.total_remaining_amount) }}</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- 4. CONTROLS BAR: SEARCH, FILTER, SORT -->
+    <section class="controls-card">
+        <div class="controls-search">
+            <div class="search-input-wrapper">
+                <i class="fa-solid fa-magnifying-glass search-icon"></i>
+                <input type="text" id="goal-search-input" class="search-input" placeholder="Search by goal name, category..." oninput="handleSearchFilterChange()">
+                <button type="button" class="search-clear-btn" id="search-clear-btn" onclick="clearSearchInput()" style="display: none;">
+                    <i class="fa-solid fa-xmark"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="controls-filters">
+            <!-- Category Filter -->
+            <div class="select-wrapper">
+                <label for="filter-category" class="sr-only">Category</label>
+                <select id="filter-category" class="filter-select" onchange="handleSearchFilterChange()">
+                    <option value="All">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat }}">{{ cat }}</option>
+                    {% endfor %}
+                </select>
+                <i class="fa-solid fa-chevron-down select-chevron"></i>
+            </div>
+
+            <!-- Goal Type Filter -->
+            <div class="select-wrapper">
+                <label for="filter-type" class="sr-only">Goal Type</label>
+                <select id="filter-type" class="filter-select" onchange="handleSearchFilterChange()">
+                    <option value="All">All Goal Types</option>
+                    {% for type in types %}
+                    <option value="{{ type }}">{{ type }}</option>
+                    {% endfor %}
+                </select>
+                <i class="fa-solid fa-chevron-down select-chevron"></i>
+            </div>
+
+            <!-- Priority Filter -->
+            <div class="select-wrapper">
+                <label for="filter-priority" class="sr-only">Priority</label>
+                <select id="filter-priority" class="filter-select" onchange="handleSearchFilterChange()">
+                    <option value="All">All Priorities</option>
+                    {% for pri in priorities %}
+                    <option value="{{ pri }}">{{ pri }}</option>
+                    {% endfor %}
+                </select>
+                <i class="fa-solid fa-chevron-down select-chevron"></i>
+            </div>
+
+            <!-- Status Filter -->
+            <div class="select-wrapper">
+                <label for="filter-status" class="sr-only">Status</label>
+                <select id="filter-status" class="filter-select" onchange="handleSearchFilterChange()">
+                    <option value="All">All Statuses</option>
+                    <option value="In Progress">In Progress</option>
+                    <option value="Completed">Completed</option>
+                    <option value="Overdue">Overdue</option>
+                </select>
+                <i class="fa-solid fa-chevron-down select-chevron"></i>
+            </div>
+
+            <!-- Sort Dropdown -->
+            <div class="select-wrapper sort-wrapper">
+                <label for="sort-by" class="sr-only">Sort By</label>
+                <select id="sort-by" class="filter-select sort-select" onchange="handleSearchFilterChange()">
+                    <option value="newest">Sort: Newest First</option>
+                    <option value="oldest">Sort: Oldest First</option>
+                    <option value="name_asc">Sort: Goal Name (A-Z)</option>
+                    <option value="name_desc">Sort: Goal Name (Z-A)</option>
+                    <option value="amount_asc">Sort: Target (Low to High)</option>
+                    <option value="amount_desc">Sort: Target (High to Low)</option>
+                    <option value="date_near">Sort: Target Date (Nearest)</option>
+                    <option value="date_far">Sort: Target Date (Furthest)</option>
+                </select>
+                <i class="fa-solid fa-arrow-down-wide-short select-chevron"></i>
+            </div>
+
+            <!-- Reset Filters Button -->
+            <button type="button" class="btn btn-secondary btn-icon-only" onclick="resetAllFilters()" title="Reset Filters" id="reset-filters-btn">
+                <i class="fa-solid fa-rotate-left"></i>
+            </button>
+        </div>
+    </section>
+
+    <!-- LOADING SPINNER CONTAINER -->
+    <div id="goals-loading-spinner" class="loading-container" style="display: none;">
+        <div class="luxury-spinner"></div>
+        <p class="loading-text">Loading your financial goals...</p>
+    </div>
+
+    <!-- 5. GOAL CARDS GRID -->
+    <section class="goals-grid-container" id="goals-grid-container">
+        {% if goals and goals|length > 0 %}
+            <div class="goals-grid" id="goals-grid">
+                {% for goal in goals %}
+                <article class="goal-card" id="goal-card-{{ goal.goal_id }}">
+                    <!-- Card Header -->
+                    <div class="goal-card-header">
+                        <div class="goal-category-icon icon-cat-{{ goal.category|lower }}">
+                            {% if goal.category == 'Education' %}<i class="fa-solid fa-graduation-cap"></i>
+                            {% elif goal.category == 'Travel' %}<i class="fa-solid fa-plane"></i>
+                            {% elif goal.category == 'Emergency' %}<i class="fa-solid fa-shield-halved"></i>
+                            {% elif goal.category == 'Personal' %}<i class="fa-solid fa-user"></i>
+                            {% elif goal.category == 'Shopping' %}<i class="fa-solid fa-bag-shopping"></i>
+                            {% elif goal.category == 'Health' %}<i class="fa-solid fa-heart-pulse"></i>
+                            {% elif goal.category == 'Family' %}<i class="fa-solid fa-users"></i>
+                            {% else %}<i class="fa-solid fa-bullseye"></i>{% endif %}
+                        </div>
+
+                        <div class="goal-card-title-group">
+                            <h2 class="goal-title">{{ goal.goal_name }}</h2>
+                            <div class="goal-meta-badges">
+                                <span class="badge badge-type">{{ goal.goal_type }}</span>
+                                <span class="badge badge-category">{{ goal.category }}</span>
+                                <span class="badge badge-priority priority-{{ goal.priority|lower }}">{{ goal.priority }} Priority</span>
+                            </div>
+                        </div>
+
+                        <div class="goal-status-badge status-{{ goal.status|lower|replace(' ', '-') }}">
+                            {% if goal.status == 'Completed' %}
+                                <i class="fa-solid fa-circle-check"></i> Completed
+                            {% elif goal.status == 'Overdue' %}
+                                <i class="fa-solid fa-circle-exclamation"></i> Overdue
+                            {% else %}
+                                <i class="fa-solid fa-clock"></i> In Progress
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Financial Breakdown Numbers -->
+                    <div class="goal-financials">
+                        <div class="fin-item">
+                            <span class="fin-label">Target</span>
+                            <span class="fin-amount fin-target">₹{{ "{:,.2f}".format(goal.target_amount) }}</span>
+                        </div>
+                        <div class="fin-item">
+                            <span class="fin-label">Saved</span>
+                            <span class="fin-amount fin-saved">₹{{ "{:,.2f}".format(goal.current_amount) }}</span>
+                        </div>
+                        <div class="fin-item">
+                            <span class="fin-label">Remaining</span>
+                            <span class="fin-amount fin-remaining">₹{{ "{:,.2f}".format(goal.remaining_amount) }}</span>
+                        </div>
+                    </div>
+
+                    <!-- Progress Bar Component -->
+                    <div class="goal-progress-wrapper">
+                        <div class="progress-info-row">
+                            <span class="progress-label">Progress</span>
+                            <span class="progress-percentage">{{ goal.progress_percentage }}%</span>
+                        </div>
+                        <div class="progress-track">
+                            <div class="progress-fill {% if goal.status == 'Completed' %}fill-completed{% elif goal.status == 'Overdue' %}fill-overdue{% endif %}" style="width: {{ goal.progress_percentage }}%;"></div>
+                        </div>
+                    </div>
+
+                    <!-- Target Date & Days Left -->
+                    <div class="goal-date-row">
+                        <span class="date-item"><i class="fa-regular fa-calendar"></i> Target: {{ goal.target_date }}</span>
+                        <span class="remaining-days-pill"><i class="fa-solid fa-hourglass-start"></i> {{ goal.remaining_days_label }}</span>
+                    </div>
+
+                    <!-- Card Actions -->
+                    <div class="goal-card-actions">
+                        <button type="button" class="btn btn-outline btn-sm" onclick="openViewModal({{ goal.goal_id }})" id="view-btn-{{ goal.goal_id }}">
+                            <i class="fa-regular fa-eye"></i> View
+                        </button>
+                        <a href="{{ url_for('goal.edit_form', goal_id=goal.goal_id) }}" class="btn btn-outline btn-sm" id="edit-btn-{{ goal.goal_id }}">
+                            <i class="fa-regular fa-pen-to-square"></i> Edit
+                        </a>
+                        <button type="button" class="btn btn-danger-soft btn-sm" onclick="openDeleteConfirmModal({{ goal.goal_id }}, '{{ goal.goal_name|replace("'", "\\'") }}')" id="delete-btn-{{ goal.goal_id }}">
+                            <i class="fa-regular fa-trash-can"></i> Delete
+                        </button>
+                    </div>
+                </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <!-- 6. LUXURY EMPTY STATE -->
+            <div class="empty-state-card" id="empty-state-card">
+                <div class="empty-state-icon">
+                    <i class="fa-solid fa-bullseye"></i>
+                </div>
+                <h2 class="empty-state-title">No financial goals yet</h2>
+                <p class="empty-state-description">Start planning today and turn your dreams into achievable targets.</p>
+                <a href="{{ url_for('goal.create_form') }}" class="btn btn-gold btn-lg" id="create-first-goal-btn">
+                    <i class="fa-solid fa-plus"></i> Create Your First Goal
+                </a>
+            </div>
+        {% endif %}
+    </section>
+</div>
+
+<!-- ============================================================ -->
+<!-- VIEW GOAL MODAL POPUP -->
+<!-- ============================================================ -->
+<div id="view-goal-modal" class="modal-overlay" aria-hidden="true" style="display: none;">
+    <div class="modal-card animate-modal-pop" role="dialog" aria-labelledby="modal-goal-title">
+        <div class="modal-header">
+            <div class="modal-title-group">
+                <span class="modal-icon-badge" id="modal-category-icon"><i class="fa-solid fa-bullseye"></i></span>
+                <div>
+                    <h2 class="modal-title" id="modal-goal-title">Goal Details</h2>
+                    <span class="modal-subtitle" id="modal-goal-category-type">Category • Type</span>
+                </div>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeViewModal()" aria-label="Close modal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <!-- Status and Priority Badges -->
+            <div class="modal-badges-row">
+                <span class="badge" id="modal-status-badge">Status</span>
+                <span class="badge" id="modal-priority-badge">Priority</span>
+            </div>
+
+            <!-- Goal Financial Breakdown -->
+            <div class="modal-financial-grid">
+                <div class="modal-fin-box">
+                    <span class="modal-fin-label">Target Amount</span>
+                    <span class="modal-fin-value modal-val-target" id="modal-target-amount">₹0.00</span>
+                </div>
+                <div class="modal-fin-box">
+                    <span class="modal-fin-label">Current Saved</span>
+                    <span class="modal-fin-value modal-val-saved" id="modal-current-amount">₹0.00</span>
+                </div>
+                <div class="modal-fin-box">
+                    <span class="modal-fin-label">Remaining Amount</span>
+                    <span class="modal-fin-value modal-val-remaining" id="modal-remaining-amount">₹0.00</span>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="modal-progress-section">
+                <div class="progress-info-row">
+                    <span class="progress-label">Goal Completion Progress</span>
+                    <span class="progress-percentage" id="modal-progress-percentage">0%</span>
+                </div>
+                <div class="progress-track">
+                    <div class="progress-fill" id="modal-progress-fill" style="width: 0%;"></div>
+                </div>
+            </div>
+
+            <!-- Timeline details -->
+            <div class="modal-detail-list">
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fa-regular fa-calendar-check"></i> Target Date</span>
+                    <span class="detail-value" id="modal-target-date">-</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label"><i class="fa-solid fa-hourglass-half"></i> Remaining Time</span>
+                    <span class="detail-value" id="modal-remaining-days">-</span>
+                </div>
+                <div class="detail-row" id="modal-desc-row">
+                    <span class="detail-label"><i class="fa-solid fa-align-left"></i> Description</span>
+                    <p class="detail-text" id="modal-description">-</p>
+                </div>
+                <div class="detail-row" id="modal-notes-row">
+                    <span class="detail-label"><i class="fa-regular fa-note-sticky"></i> Strategic Notes</span>
+                    <p class="detail-text" id="modal-notes">-</p>
+                </div>
+                <div class="detail-row timestamps-row">
+                    <span class="detail-meta" id="modal-created-at">Created: -</span>
+                    <span class="detail-meta" id="modal-updated-at">Updated: -</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeViewModal()">Close</button>
+            <a href="#" id="modal-edit-btn" class="btn btn-gold">
+                <i class="fa-regular fa-pen-to-square"></i> Edit Goal
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- ============================================================ -->
+<!-- DELETE CONFIRMATION MODAL POPUP -->
+<!-- ============================================================ -->
+<div id="delete-confirm-modal" class="modal-overlay" aria-hidden="true" style="display: none;">
+    <div class="modal-card modal-card-sm animate-modal-pop" role="dialog" aria-labelledby="delete-modal-title">
+        <div class="modal-header header-danger">
+            <div class="modal-title-group">
+                <span class="modal-icon-badge icon-badge-danger"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <h2 class="modal-title" id="delete-modal-title">Confirm Goal Deletion</h2>
+            </div>
+            <button type="button" class="modal-close-btn" onclick="closeDeleteConfirmModal()" aria-label="Close">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+
+        <div class="modal-body">
+            <p class="delete-warning-text">
+                Are you sure you want to delete <strong id="delete-goal-name-placeholder">this goal</strong>?
+            </p>
+            <p class="delete-subtext">This action cannot be undone and will permanently remove this record from your PostgreSQL database.</p>
+        </div>
+
+        <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" onclick="closeDeleteConfirmModal()">Cancel</button>
+            <form id="delete-goal-form" method="POST" action="" style="display: inline;">
+                <button type="submit" class="btn btn-danger" id="confirm-delete-submit-btn">
+                    <i class="fa-regular fa-trash-can"></i> Delete Goal
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
