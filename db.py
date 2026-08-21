@@ -1,9 +1,9 @@
 from contextlib import contextmanager
+import psycopg2
+from psycopg2.extras import DictCursor, RealDictCursor
+import pandas as pd
 from datetime import date, datetime
 from decimal import Decimal
-
-import psycopg2
-from psycopg2.extras import RealDictCursor
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from config import Config
@@ -603,4 +603,114 @@ def get_expense_summary(user_id):
         "month_expenses": summary.get("month_expenses", 0),
         "month_spent": summary.get("month_spent", 0.0),
         "top_category": top_category.get("category", "No data") if top_category else "No data",
+    }
+
+
+def get_spending_analysis_data(user_id, time_window="MTD"):
+    ensure_transactions_table()
+    
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            # Fetch all expenses for the user
+            cursor.execute(
+                """
+                SELECT id, category, amount, date
+                FROM transactions
+                WHERE user_id = %s AND type = 'Expense'
+                ORDER BY date ASC
+                """, (user_id,)
+            )
+            rows = cursor.fetchall()
+
+    if not rows:
+        import datetime as _dt
+        today_date = _dt.datetime.today().date()
+        
+        # Spread mock transactions across 30 days so each time window shows different data
+        DEFAULT_MOCK_TRANSACTIONS = [
+            # Recent (within last 7 days) — visible in all filters
+            {"category": "Home", "amount": 21450.00, "days_ago": 1},
+            {"category": "Shopping", "amount": 20031.00, "days_ago": 3},
+            {"category": "Entertainment", "amount": 2179.00, "days_ago": 5},
+            # Mid-range (8-20 days ago) — visible in MTD and L30D only
+            {"category": "Home", "amount": 14200.00, "days_ago": 10},
+            {"category": "Meals (clients or travel)", "amount": 7246.00, "days_ago": 12},
+            {"category": "Car & Truck", "amount": 8450.00, "days_ago": 15},
+            # Older (21-30 days ago) — visible in L30D only
+            {"category": "Personal Care", "amount": 3592.00, "days_ago": 22},
+            {"category": "Uncategorized", "amount": 1476.00, "days_ago": 28},
+        ]
+        rows = []
+        for i, m in enumerate(DEFAULT_MOCK_TRANSACTIONS):
+            dt = today_date - _dt.timedelta(days=m["days_ago"])
+            rows.append({"id": i, "category": m["category"], "amount": m["amount"], "date": dt})
+
+    # Convert DictRows to dictionaries
+    df = pd.DataFrame([dict(row) for row in rows])
+    
+    # Ensure amount is numeric
+    df["amount"] = pd.to_numeric(df["amount"])
+    df["date"] = pd.to_datetime(df["date"])
+    
+    # Apply Time Window Filter
+    today = pd.Timestamp.today().normalize()
+    if time_window == "MTD":
+        start_date = today.replace(day=1)
+    elif time_window == "L7D":
+        start_date = today - pd.Timedelta(days=6)
+    elif time_window == "L30D":
+        start_date = today - pd.Timedelta(days=29)
+    else:
+        start_date = today.replace(day=1)
+        
+    df = df[(df["date"] >= start_date) & (df["date"] <= today)]
+    
+    if df.empty:
+        return {
+            "total_expenses": 0.0,
+            "date_range": f"{start_date.strftime('%b %d, %Y')} - {today.strftime('%b %d, %Y')}",
+            "spend_by_category": [],
+            "assist_insights": {
+                "summary": "No spending data available in this time window.",
+                "top_spending": []
+            }
+        }
+    df["amount"] = pd.to_numeric(df["amount"])
+    
+    total_spend = float(df["amount"].sum())
+    
+    # Calculate Date Range
+    min_date = df["date"].min().strftime("%b %d, %Y")
+    max_date = df["date"].max().strftime("%b %d, %Y")
+    date_range = f"{min_date} - {max_date}"
+
+    # Category Breakdown
+    cat_df = df.groupby("category")["amount"].sum().reset_index().sort_values(by="amount", ascending=False)
+    
+    spend_by_category = []
+    for _, row in cat_df.iterrows():
+        spend_by_category.append({
+            "category": row["category"],
+            "amount": float(row["amount"]),
+            "percentage": round((row["amount"] / total_spend) * 100, 2)
+        })
+
+    # Assist Insights Generation
+    summary_text = (f"In the period from {min_date} to {max_date}, total spending was "
+                    f"₹{total_spend:,.2f} across all available categories. ")
+    
+    if len(cat_df) > 0:
+        top_cat = cat_df.iloc[0]
+        summary_text += f"The largest share of expenses went to {top_cat['category']}, accounting for ₹{top_cat['amount']:,.2f}."
+        
+    top_spending = [f"• {c['category']}: ₹{c['amount']:,.2f}" for c in spend_by_category[:5]]
+    
+    return {
+        "total_expenses": total_spend,
+        "date_range": date_range,
+        "spend_by_category": spend_by_category,
+        "assist_insights": {
+            "summary": summary_text,
+            "top_spending": top_spending
+        }
     }

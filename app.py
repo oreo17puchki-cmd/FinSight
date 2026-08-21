@@ -23,6 +23,7 @@ from db import (
     login_user,
     register_user,
     update_budget,
+    get_spending_analysis_data,
 )
 from finsight.repositories.investment_repository import InvestmentRepository
 from finsight.services.investment_service import ASSET_TYPES, InvestmentService
@@ -163,6 +164,26 @@ def expense():
         stats=stats,
         current_username=session["username"],
     )
+
+@app.route("/spending-analysis")
+def spending_analysis():
+    redirect_response = login_required_redirect()
+    if redirect_response:
+        return redirect_response
+
+    return render_template(
+        "spending_analysis.html",
+        current_username=session["username"],
+    )
+
+@app.route("/api/spending-analysis/data")
+def spending_analysis_data():
+    if not session.get("uid"):
+        return jsonify({"error": "Unauthorized"}), 401
+    
+    time_window = request.args.get("time_window", "MTD")
+    data = get_spending_analysis_data(current_user_id(), time_window)
+    return jsonify(data)
 
 @app.route("/budget")
 @app.route("/budgets")

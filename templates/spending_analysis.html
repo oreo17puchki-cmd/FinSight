@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Spending Analysis{% endblock %}
+
+{% block page_styles %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/spending_analysis.css') }}?v={{ range(1, 1000) | random }}">
+{% endblock %}
+
+{% block content %}
+
+<!-- Controls Bar -->
+<div class="controls-bar">
+  <div class="controls-left">
+    <select id="time-window-select" class="dropdown-control" style="appearance: none; padding-right: 2.5rem; background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"%23475569\" class=\"bi bi-chevron-down\" viewBox=\"0 0 16 16\"><path fill-rule=\"evenodd\" d=\"M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z\"/></svg>') no-repeat right 0.75rem center/16px 16px;">
+      <option value="MTD">Month To Date</option>
+      <option value="L7D">Last 7 Days</option>
+      <option value="L30D">Last 30 Days</option>
+    </select>
+  </div>
+</div>
+
+<!-- Main Split Layout -->
+<div class="analytics-layout">
+  
+  <!-- Column 1: Left 70% -->
+  <div class="analytics-main">
+    <div class="total-expenses-header">
+      <span class="expenses-title">Total expenses</span>
+      <h2 class="expenses-amount" id="val-total-expenses">₹0.00</h2>
+      <span class="expenses-date" id="val-date-range">Loading dates...</span>
+    </div>
+
+    <div class="chart-and-legend">
+      <div class="chart-section" id="plotly-donut-chart">
+        <!-- Plotly Chart goes here -->
+      </div>
+      <div class="legend-section">
+        <div class="legend-grid" id="category-legend-grid">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Column 2: Right 30% -->
+  <div class="analytics-sidebar">
+    <div class="assist-card">
+      <div class="assist-card-header">
+        <span class="assist-badge"><i class="fa-solid fa-wand-magic-sparkles"></i> FinSight Assist</span>
+        <span class="beta-tag">Beta</span>
+      </div>
+      
+      <div class="assist-section">
+        <h4>Spending Summary</h4>
+        <p id="assist-summary">Loading insights...</p>
+      </div>
+
+      <div class="assist-section">
+        <h4>Category Snapshot</h4>
+        <p>A detailed breakdown of your essential versus discretionary spending shows the highest concentration in the top categories.</p>
+      </div>
+
+      <div class="assist-section">
+        <h4>Top Spending</h4>
+        <div class="assist-bullets" id="assist-top-spending">
+          <!-- Populated by JS -->
+        </div>
+      </div>
+
+      <div class="assist-section">
+        <h4>Spending Insights</h4>
+        <p>Review your top categories to identify potential leakage. Consider setting stricter limits on non-essential groups to maximize savings.</p>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<!-- Plotly.js -->
+<script src="https://cdn.plot.ly/plotly-2.32.0.min.js"></script>
+<script src="{{ url_for('static', filename='js/spending_analysis_v2.js') }}?v={{ range(1, 1000) | random }}"></script>
+{% endblock %}

@@ -93,6 +93,13 @@
             </a>
           </li>
 
+          <li class="{% if request.endpoint == 'spending_analysis' %}active{% endif %}">
+            <a href="{{ url_for('spending_analysis') }}">
+              <i class="bi bi-pie-chart"></i>
+              <span>Spending Analysis</span>
+            </a>
+          </li>
+
           <li class="{% if request.endpoint == 'budgets' %}active{% endif %}">
             <a href="{{ url_for('budgets') }}">
               <i class="bi bi-wallet2"></i>
