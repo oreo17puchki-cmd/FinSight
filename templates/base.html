@@ -93,7 +93,17 @@
               <span>Goals</span>
             </a>
           </li>
-
+          
+          <li class="{% if request.endpoint in ['notifications_page'] %}active{% endif %}">
+            <a href="{{ url_for('notifications_page') }}">
+              <i class="bi bi-bell"></i>
+              <span>Notifications</span>
+              {% if unread_notifications_count %}
+              <span class="badge bg-danger ms-1">{{ unread_notifications_count }}</span>
+              {% endif %}
+            </a>
+          </li>
+          
           <li class="logout">
             <a href="{{ url_for('logout') }}">
               <i class="bi bi-box-arrow-right"></i>

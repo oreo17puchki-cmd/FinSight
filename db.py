@@ -180,6 +180,16 @@ def create_budget(user_id, data):
                 ),
             )
             return serialize_row(cursor.fetchone())
+        
+        if payload["budget_amount"] > 0 and payload["spent_amount"] >= payload["budget_amount"]:
+            create_notification(
+            user_id,
+            "Budget Alert",
+            f"You have exceeded your budget for {payload['budget_name'] or 'this budget'}.",
+            "budget",
+        )
+
+    return created
 
 
 def get_all_budgets(user_id):
@@ -264,59 +274,35 @@ def get_budget(budget_id, user_id):
 def update_budget(budget_id, user_id, data):
     payload = _clean_budget_data(data)
 
+    previous = get_budget(budget_id, user_id)
+    was_exceeded = bool(
+        previous
+        and previous.get("budget_amount", 0) > 0
+        and previous.get("spent_amount", 0) >= previous.get("budget_amount", 0)
+    )
+
     with get_connection() as conn:
         with conn.cursor() as cursor:
             cursor.execute(
                 """
                 UPDATE budgets
-                SET
-                    budget_name = %s,
-                    description = %s,
-                    category = %s,
-                    budget_amount = %s,
-                    spent_amount = %s,
-                    remaining_amount = %s,
-                    currency = %s,
-                    start_date = %s,
-                    end_date = %s,
-                    status = %s,
-                    priority = %s,
-                    expected_income = %s,
-                    expected_expenses = %s,
-                    savings_goal = %s,
-                    alert_percentage = %s,
-                    color_label = %s,
-                    budget_icon = %s,
-                    is_recurring = %s,
-                    notes = %s,
-                    updated_at = NOW()
+                SET ... (unchanged)
                 WHERE budget_id = %s AND user_id = %s
                 """,
-                (
-                    payload["budget_name"],
-                    payload["description"],
-                    payload["category"],
-                    payload["budget_amount"],
-                    payload["spent_amount"],
-                    payload["remaining_amount"],
-                    payload["currency"],
-                    payload["start_date"],
-                    payload["end_date"],
-                    payload["status"],
-                    payload["priority"],
-                    payload["expected_income"],
-                    payload["expected_expenses"],
-                    payload["savings_goal"],
-                    payload["alert_percentage"],
-                    payload["color_label"],
-                    payload["budget_icon"],
-                    payload["is_recurring"],
-                    payload["notes"],
-                    budget_id,
-                    user_id,
-                ),
+                (...),
             )
-            return cursor.rowcount > 0
+            updated = cursor.rowcount > 0
+
+    is_exceeded = payload["budget_amount"] > 0 and payload["spent_amount"] >= payload["budget_amount"]
+    if updated and is_exceeded and not was_exceeded:
+        create_notification(
+            user_id,
+            "Budget Alert",
+            f"You have exceeded your budget for {payload['budget_name'] or 'this budget'}.",
+            "budget",
+        )
+
+    return updated
 
 
 def delete_budget(budget_id, user_id):
@@ -604,3 +590,81 @@ def get_expense_summary(user_id):
         "month_spent": summary.get("month_spent", 0.0),
         "top_category": top_category.get("category", "No data") if top_category else "No data",
     }
+
+def create_notification(user_id, title, message, notification_type):
+    """Insert a notification. Never raises — a notification failure must not
+    break the calling operation (investment/goal/budget flows)."""
+    try:
+        with get_connection() as conn:
+            with conn.cursor() as cursor:
+                cursor.execute(
+                    """
+                    INSERT INTO notifications (user_id, title, message, notification_type)
+                    VALUES (%s, %s, %s, %s)
+                    RETURNING notification_id
+                    """,
+                    (user_id, title, message, notification_type),
+                )
+                return serialize_row(cursor.fetchone())
+    except Exception:
+        import logging
+        logging.getLogger(__name__).exception("Failed to create notification")
+        return None
+
+
+def get_notifications(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT notification_id, title, message, notification_type, is_read, created_at
+                FROM notifications
+                WHERE user_id = %s
+                ORDER BY created_at DESC
+                """,
+                (user_id,),
+            )
+            return serialize_rows(cursor.fetchall())
+
+
+def get_unread_count(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT COUNT(*) AS unread_count
+                FROM notifications
+                WHERE user_id = %s AND is_read = FALSE
+                """,
+                (user_id,),
+            )
+            row = cursor.fetchone()
+    return int(row["unread_count"]) if row else 0
+
+
+def mark_notification_read(notification_id, user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE notifications
+                SET is_read = TRUE
+                WHERE notification_id = %s AND user_id = %s
+                """,
+                (notification_id, user_id),
+            )
+            return cursor.rowcount > 0
+
+
+def mark_all_notifications_read(user_id):
+    with get_connection() as conn:
+        with conn.cursor() as cursor:
+            cursor.execute(
+                """
+                UPDATE notifications
+                SET is_read = TRUE
+                WHERE user_id = %s AND is_read = FALSE
+                """,
+                (user_id,),
+            )
+            return cursor.rowcount

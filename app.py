@@ -16,14 +16,19 @@ from flask import (
 from config import Config
 from db import (
     create_budget,
+    create_notification,
     delete_budget,
     filter_budgets,
     get_budget,
     get_expense_summary,
+    get_notifications,
     get_summary_stats,
     get_transactions,
+    get_unread_count,
     init_db,
     login_user,
+    mark_all_notifications_read,
+    mark_notification_read,
     register_user,
     update_budget,
 )
@@ -139,6 +144,50 @@ def register():
 def logout():
     session.clear()
     return redirect(url_for("login"))
+
+@app.route("/notifications")
+def notifications_page():
+    redirect_response = login_required_redirect()
+    if redirect_response:
+        return redirect_response
+    return render_template(
+        "notifications.html",
+        notifications=get_notifications(current_user_id()),
+    )
+
+
+@app.post("/notifications/<int:notification_id>/read")
+def mark_notification_read_route(notification_id):
+    redirect_response = login_required_redirect()
+    if redirect_response:
+        return redirect_response
+    mark_notification_read(notification_id, current_user_id())
+    return redirect(url_for("notifications_page"))
+
+
+@app.post("/notifications/read-all")
+def mark_all_notifications_read_route():
+    redirect_response = login_required_redirect()
+    if redirect_response:
+        return redirect_response
+    mark_all_notifications_read(current_user_id())
+    return redirect(url_for("notifications_page"))
+
+
+@app.route("/notifications/test")
+def notifications_test_route():
+    # DEVELOPMENT/TEST ONLY — remove this route before shipping.
+    redirect_response = login_required_redirect()
+    if redirect_response:
+        return redirect_response
+    create_notification(
+        current_user_id(),
+        "Test Notification",
+        "Your notification system is working successfully.",
+        "test"
+    )
+    flash("Test notification created.", "success")
+    return redirect(url_for("notifications_page"))
 
 
 @app.route("/dashboard")
@@ -303,6 +352,7 @@ def inject_template_globals():
     return {
         "today_date": datetime.now().strftime("%B %d, %Y"),
         "current_username": session.get("username", ""),
+        "unread_notifications_count": get_unread_count(session["uid"]) if session.get("uid") else 0,
     }
 
 
@@ -693,6 +743,7 @@ def create_investment():
         return render_investment_form(request.form, errors=errors), 400
 
     flash("Investment added successfully.", "success")
+    create_notification(current_user_id(), "Investment Added", "Your investment was successfully added.", "investment")
     return redirect(url_for("investments"))
 
 
@@ -740,6 +791,7 @@ def edit_investment(investment_id):
         return redirect(url_for("investments"))
 
     flash("Investment updated successfully.", "success")
+    create_notification(current_user_id(), "Investment Updated", "Your investment was successfully updated.", "investment")
     return redirect(url_for("investments"))
 
 
@@ -755,6 +807,8 @@ def delete_investment(investment_id):
     deleted = investment_service.delete(investment_id, current_user_id())
     flash("Investment deleted successfully." if deleted else "Investment not found.",
           "success" if deleted else "danger")
+    if deleted:
+        create_notification(current_user_id(), "Investment Deleted", "Your investment was successfully deleted.", "investment")
     return redirect(url_for("investments"))
 
 
@@ -794,6 +848,7 @@ def create_goal():
             flash(error, "danger")
         return render_goal_form(request.form, errors=errors), 400
     flash("Financial goal created successfully.", "success")
+    create_notification(current_user_id(), "Goal Created", "Your financial goal was successfully created.", "goal")
     return redirect(url_for("goals"))
 
 
