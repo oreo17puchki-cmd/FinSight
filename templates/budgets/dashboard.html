@@ -24,6 +24,43 @@
   </div>
 </header>
 
+<!--RECOMMENDATIONS-->
+
+{% if recommendations %}
+<section class="animated-fade-in" style="margin-bottom: 24px;">
+    <div class="metric-card">
+        <div class="metric-header">
+            <span class="metric-title">Budget Recommendations</span>
+
+            <div class="metric-icon-box" style="color: var(--luxury-gold);">
+                <i class="fa-solid fa-lightbulb"></i>
+            </div>
+        </div>
+
+        <div style="display: flex; flex-direction: column; gap: 12px; margin-top: 12px;">
+
+            {% for rec in recommendations %}
+            <div class="recommendation-item rec-{{ rec.type }}">
+
+                <div class="recommendation-icon">
+                    <i class="fa-solid {{ rec.icon }}"></i>
+                </div>
+
+                <div>
+                    <strong>{{ rec.title }}</strong>
+                    <p class="recommendation-message">
+                        {{ rec.message }}
+                    </p>
+                </div>
+
+            </div>
+            {% endfor %}
+
+        </div>
+    </div>
+</section>
+{% endif %}
+
 <!-- Summary Metric Glass Cards Grid -->
 <section class="summary-grid animated-fade-in">
   <!-- Metric 1: Total Budgets -->
@@ -50,7 +87,7 @@
 
   <!-- Metric 3: Completed Budgets -->
   <div class="metric-card">
-    <div class="metric-header">
+    <div class="metric-header"
       <span class="metric-title">Completed</span>
       <div class="metric-icon-box" style="color: var(--luxury-gold);">
         <i class="fa-solid fa-circle-check"></i>
@@ -153,7 +190,7 @@
         >
           <div class="card-top">
             <div class="card-category-badge">
-              <i class="fa-solid {{ b.budget_icon or 'fa-wallet' }}" style="color: {{ b.color_label or '#0E5A4E' }};"></i>
+              <i class="fa-solid {{ b.budget_icon or 'fa-wallet' }}" style="color: { b.color_label or '#0E5A4E' };"></i>
               {{ b.category }}
             </div>
             <span class="card-priority-badge priority-{{ b.priority }}">{{ b.priority }}</span>

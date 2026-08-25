@@ -26,6 +26,7 @@ from db import (
     login_user,
     register_user,
     update_budget,
+    get_budget_recommendations,
 )
 from investment_repository import InvestmentRepository
 from investment_service import ASSET_TYPES, InvestmentService
@@ -286,11 +287,13 @@ def budgets():
         sort_by=sort_by,
     )
     stats = get_summary_stats(current_user_id())
+    recommendations = get_budget_recommendations(budget_rows)
 
     return render_template(
         "budgets/dashboard.html",
         budgets=budget_rows,
         stats=stats,
+        recommendations=recommendations,
         search_query=search_query,
         category_filter=category_filter,
         status_filter=status_filter,

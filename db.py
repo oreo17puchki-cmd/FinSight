@@ -15,7 +15,7 @@ def _connection_kwargs():
         "database": Config.DB_NAME,
         "user": Config.DB_USER,
         "password": Config.DB_PASSWORD,
-        "port": Config.DB_PORT or 5432,
+        "port": Config.DB_PORT or 5433,
         "cursor_factory": RealDictCursor,
     }
 
@@ -604,3 +604,69 @@ def get_expense_summary(user_id):
         "month_spent": summary.get("month_spent", 0.0),
         "top_category": top_category.get("category", "No data") if top_category else "No data",
     }
+
+def get_budget_recommendations(budget_rows):
+        """Pure rule-based recommendations from already-fetched budget rows.
+        No DB call needed — reuses data the /budgets route already has."""
+        recommendations = []
+
+        for b in budget_rows:
+            if b.get("status") != "Active":
+                continue
+
+            budget_amount = float(b.get("budget_amount") or 0)
+            spent_amount = float(b.get("spent_amount") or 0)
+            alert_percentage = b.get("alert_percentage") or 80
+            name = b.get("budget_name") or b.get("category") or "this budget"
+
+            if budget_amount <= 0:
+                continue
+
+            usage = (spent_amount / budget_amount) * 100
+
+            if spent_amount >= budget_amount:
+                over_by = spent_amount - budget_amount
+                recommendations.append({
+                    "type": "danger",
+                    "icon": "fa-triangle-exclamation",
+                    "title": "Over Budget",
+                    "message": f"You've exceeded your \"{name}\" budget by ${over_by:,.2f}. Consider reducing spending in {b.get('category')} next period.",
+                })
+            elif usage >= alert_percentage:
+                remaining = budget_amount - spent_amount
+                recommendations.append({
+                    "type": "warning",
+                    "icon": "fa-clock",
+                    "title": "Approaching Limit",
+                    "message": f"You've used {usage:.0f}% of your \"{name}\" budget. ${remaining:,.2f} remaining.",
+                })
+            elif usage < 50:
+                recommendations.append({
+                    "type": "success",
+                    "icon": "fa-circle-check",
+                    "title": "On Track",
+                    "message": f"Your \"{name}\" budget is well managed — only {usage:.0f}% used so far.",
+                })
+
+        active_spending = [
+            b for b in budget_rows
+            if b.get("status") == "Active" and float(b.get("spent_amount") or 0) > 0
+        ]
+        if active_spending:
+            top = max(active_spending, key=lambda b: float(b.get("spent_amount") or 0))
+            recommendations.append({
+                "type": "info",
+                "icon": "fa-lightbulb",
+                "title": "Spending Tip",
+                "message": f"\"{top.get('budget_name')}\" is your highest spending budget at ${float(top.get('spent_amount') or 0):,.2f}. Look for ways to trim this category.",
+            })
+
+        if not recommendations:
+            recommendations.append({
+                "type": "info",
+                "icon": "fa-circle-info",
+                "title": "No Recommendations Yet",
+                "message": "Create a budget and start tracking spending to see personalized recommendations here.",
+            })
+
+        return recommendations[:5]
