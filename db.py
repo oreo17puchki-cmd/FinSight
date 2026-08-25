@@ -606,6 +606,259 @@ def get_expense_summary(user_id):
     }
 
 
+def calculate_burn_rate_metrics(df):
+    if df is None or df.empty:
+        # Default benchmark — ₹60,000/month employee, 60% expenses (₹36,000), 40% savings (₹24,000)
+        return {
+            "phases": [
+                {
+                    "phase_id": 1,
+                    "phase_name": "Phase 1 (Days 1-10)",
+                    "subtitle": "Post-Payday Surge",
+                    "total_amount": 18500.0,
+                    "daily_avg": 1850.0,
+                    "days": 10,
+                    "percentage": 51.4,
+                    "color": "#941334"
+                },
+                {
+                    "phase_id": 2,
+                    "phase_name": "Phase 2 (Days 11-20)",
+                    "subtitle": "Mid-Month Baseline",
+                    "total_amount": 11000.0,
+                    "daily_avg": 1100.0,
+                    "days": 10,
+                    "percentage": 30.6,
+                    "color": "#E5A93C"
+                },
+                {
+                    "phase_id": 3,
+                    "phase_name": "Phase 3 (Days 21-End)",
+                    "subtitle": "Month-End Frugality",
+                    "total_amount": 6500.0,
+                    "daily_avg": 650.0,
+                    "days": 10,
+                    "percentage": 18.1,
+                    "color": "#3E8299"
+                }
+            ],
+            "max_daily_avg": 1850.0,
+            "total_monthly_spending": 36000.0,
+            "multiplier": 2.85,
+            "phase_1_percentage": 51.4,
+            "status": "surge",
+            "alert_theme": "warning",
+            "alert_icon": "fa-solid fa-triangle-exclamation",
+            "alert_title": "Post-Payday Surge Detected:",
+            "alert_line_1": "Your daily spending in Days 1-10 is 2.85x higher than Month-End.",
+            "alert_line_2": "51.4% of total monthly expenses occurred in the first 10 days."
+        }
+    
+    df_burn = df.copy()
+    df_burn["amount"] = pd.to_numeric(df_burn["amount"], errors="coerce").fillna(0.0)
+    df_burn["date"] = pd.to_datetime(df_burn["date"], errors="coerce")
+    df_burn = df_burn.dropna(subset=["date"])
+    
+    if df_burn.empty:
+        return calculate_burn_rate_metrics(None)
+        
+    df_burn["day"] = df_burn["date"].dt.day
+    
+    # Phase 1: Days 1-10
+    p1 = df_burn[(df_burn["day"] >= 1) & (df_burn["day"] <= 10)]
+    p1_total = float(p1["amount"].sum())
+    p1_days = 10
+    p1_avg = p1_total / p1_days
+    
+    # Phase 2: Days 11-20
+    p2 = df_burn[(df_burn["day"] >= 11) & (df_burn["day"] <= 20)]
+    p2_total = float(p2["amount"].sum())
+    p2_days = 10
+    p2_avg = p2_total / p2_days
+    
+    # Phase 3: Days 21-End
+    p3 = df_burn[df_burn["day"] >= 21]
+    p3_total = float(p3["amount"].sum())
+    p3_days = 10
+    p3_avg = p3_total / p3_days
+    
+    total_monthly = p1_total + p2_total + p3_total
+    
+    if total_monthly <= 0:
+        return calculate_burn_rate_metrics(None)
+
+    p1_pct = round((p1_total / total_monthly) * 100, 1)
+    p2_pct = round((p2_total / total_monthly) * 100, 1)
+    p3_pct = round((p3_total / total_monthly) * 100, 1)
+    
+    max_avg = max(p1_avg, p2_avg, p3_avg, 1.0)
+    
+    if p3_avg > 0:
+        multiplier = round(p1_avg / p3_avg, 1)
+        line_1 = f"Your daily spending in Days 1-10 is {multiplier:.1f}x higher than Month-End."
+    elif p2_avg > 0:
+        multiplier = round(p1_avg / p2_avg, 1)
+        line_1 = f"Your daily spending in Days 1-10 is {multiplier:.1f}x higher than Mid-Month Baseline."
+    else:
+        multiplier = 1.0
+        line_1 = "Spending in Days 1-10 represents the dominant portion of your monthly expenses."
+        
+    line_2 = f"{p1_pct:.1f}% of total monthly expenses occurred in the first 10 days."
+    
+    if multiplier >= 1.5 or p1_pct >= 45.0:
+        status = "surge"
+        alert_theme = "warning"
+        alert_icon = "fa-solid fa-triangle-exclamation"
+        alert_title = "Post-Payday Surge Detected:"
+    elif p2_avg > p1_avg and p2_avg > p3_avg:
+        status = "mid_surge"
+        alert_theme = "info"
+        alert_icon = "fa-solid fa-circle-info"
+        alert_title = "Mid-Month Spike Detected:"
+        line_1 = f"Your daily spending peaked in Days 11-20 at ₹{p2_avg:,.0f}/day."
+        line_2 = f"Mid-month spending accounted for {p2_pct:.1f}% of monthly expenses."
+    else:
+        status = "balanced"
+        alert_theme = "success"
+        alert_icon = "fa-solid fa-circle-check"
+        alert_title = "Balanced Monthly Burn Rate:"
+        line_1 = "Your daily spending is evenly distributed throughout the month."
+        line_2 = f"First 10 days accounted for {p1_pct:.1f}% of total monthly expenses."
+        
+    return {
+        "phases": [
+            {
+                "phase_id": 1,
+                "phase_name": "Phase 1 (Days 1-10)",
+                "subtitle": "Post-Payday Surge",
+                "total_amount": round(p1_total, 2),
+                "daily_avg": round(p1_avg, 2),
+                "days": p1_days,
+                "percentage": p1_pct,
+                "color": "#8b1538"
+            },
+            {
+                "phase_id": 2,
+                "phase_name": "Phase 2 (Days 11-20)",
+                "subtitle": "Mid-Month Baseline",
+                "total_amount": round(p2_total, 2),
+                "daily_avg": round(p2_avg, 2),
+                "days": p2_days,
+                "percentage": p2_pct,
+                "color": "#d99b38"
+            },
+            {
+                "phase_id": 3,
+                "phase_name": "Phase 3 (Days 21-End)",
+                "subtitle": "Month-End Frugality",
+                "total_amount": round(p3_total, 2),
+                "daily_avg": round(p3_avg, 2),
+                "days": p3_days,
+                "percentage": p3_pct,
+                "color": "#388299"
+            }
+        ],
+        "max_daily_avg": round(max_avg, 2),
+        "total_monthly_spending": round(total_monthly, 2),
+        "multiplier": multiplier,
+        "phase_1_percentage": p1_pct,
+        "status": status,
+        "alert_theme": alert_theme,
+        "alert_icon": alert_icon,
+        "alert_title": alert_title,
+        "alert_line_1": line_1,
+        "alert_line_2": line_2
+    }
+
+
+
+def calculate_labor_equivalency(df, monthly_salary=60000.0):
+    """
+    Translates discretionary spending into work hours and work days.
+    Standard: 160 working hours/month (20 days × 8 hrs/day).
+    """
+    WORK_HOURS_PER_MONTH = 160.0
+    WORK_HOURS_PER_DAY   = 8.0
+
+    # Hourly wage
+    hourly_rate = monthly_salary / WORK_HOURS_PER_MONTH
+
+    # Discretionary category aliases (flexible matching)
+    CATEGORY_MAP = {
+        "shopping":     ["Shopping", "Clothing", "Lifestyle"],
+        "dining":       ["Meals (clients or travel)", "Dining", "Food & Dining", "Restaurants", "Meals"],
+        "entertainment": ["Entertainment", "Recreation", "Leisure", "Movies", "Sports"],
+    }
+
+    def _sum_categories(df_inner, aliases):
+        if df_inner is None or df_inner.empty:
+            return 0.0
+        mask = df_inner["category"].str.lower().apply(
+            lambda c: any(a.lower() in c or c in a.lower() for a in aliases)
+        )
+        return float(df_inner.loc[mask, "amount"].sum())
+
+    # Fallback mock amounts (match new ₹60k salary discretionary target values)
+    if df is None or df.empty:
+        shop_amt = 6000.0
+        dine_amt = 4500.0
+        ent_amt  = 1875.0
+    else:
+        shop_amt = _sum_categories(df, CATEGORY_MAP["shopping"])
+        dine_amt = _sum_categories(df, CATEGORY_MAP["dining"])
+        ent_amt  = _sum_categories(df, CATEGORY_MAP["entertainment"])
+
+    def _hrs(amt):
+        return round(amt / hourly_rate, 1) if hourly_rate > 0 else 0.0
+
+    def _days(hrs):
+        return round(hrs / WORK_HOURS_PER_DAY, 1)
+
+    shop_hrs  = _hrs(shop_amt);  shop_days  = _days(shop_hrs)
+    dine_hrs  = _hrs(dine_amt);  dine_days  = _days(dine_hrs)
+    ent_hrs   = _hrs(ent_amt);   ent_days   = _days(ent_hrs)
+    total_hrs  = round(shop_hrs + dine_hrs + ent_hrs, 1)
+    total_days = _days(total_hrs)
+
+    return {
+        "hourly_rate": round(hourly_rate, 0),
+        "monthly_salary": monthly_salary,
+        "work_hours_per_month": WORK_HOURS_PER_MONTH,
+        "categories": [
+            {
+                "key": "shopping",
+                "label": "Shopping",
+                "icon": "🛍️",
+                "amount": shop_amt,
+                "hours": shop_hrs,
+                "days": shop_days,
+            },
+            {
+                "key": "dining",
+                "label": "Dining / Meals",
+                "icon": "🍽️",
+                "amount": dine_amt,
+                "hours": dine_hrs,
+                "days": dine_days,
+            },
+            {
+                "key": "entertainment",
+                "label": "Entertainment",
+                "icon": "🎬",
+                "amount": ent_amt,
+                "hours": ent_hrs,
+                "days": ent_days,
+            },
+        ],
+        "total_hours": total_hrs,
+        "total_days": total_days,
+        "callout": (
+            f"You worked {total_hrs} hours (~{total_days} working days) "
+            f"this month solely to fund discretionary lifestyle purchases."
+        ),
+    }
+
+
 def get_spending_analysis_data(user_id, time_window="MTD"):
     ensure_transactions_table()
     
@@ -621,8 +874,35 @@ def get_spending_analysis_data(user_id, time_window="MTD"):
                 """, (user_id,)
             )
             rows = cursor.fetchall()
+            
+            # Query user's monthly salary from Income transactions (e.g. Current Month or Fallback)
+            cursor.execute(
+                """
+                SELECT COALESCE(SUM(amount), 0.0) as salary
+                FROM transactions
+                WHERE user_id = %s AND type = 'Income' AND date >= DATE_TRUNC('month', CURRENT_DATE)
+                """, (user_id,)
+            )
+            salary_row = cursor.fetchone()
+            monthly_salary = float(salary_row["salary"]) if salary_row and salary_row["salary"] else 0.0
+            
+            # If no income found in the current month, fallback to the latest income transaction
+            if monthly_salary <= 0.0:
+                cursor.execute(
+                    """
+                    SELECT amount
+                    FROM transactions
+                    WHERE user_id = %s AND type = 'Income'
+                    ORDER BY date DESC, id DESC
+                    LIMIT 1
+                    """ , (user_id,)
+                )
+                latest_salary_row = cursor.fetchone()
+                monthly_salary = float(latest_salary_row["amount"]) if latest_salary_row else 60000.0
 
+    is_mock = False
     if not rows:
+        is_mock = True
         import datetime as _dt
         today_date = _dt.datetime.today().date()
         
@@ -630,11 +910,11 @@ def get_spending_analysis_data(user_id, time_window="MTD"):
         DEFAULT_MOCK_TRANSACTIONS = [
             # Recent (within last 7 days) — visible in all filters
             {"category": "Home", "amount": 21450.00, "days_ago": 1},
-            {"category": "Shopping", "amount": 20031.00, "days_ago": 3},
-            {"category": "Entertainment", "amount": 2179.00, "days_ago": 5},
+            {"category": "Shopping", "amount": 6000.00, "days_ago": 3},
+            {"category": "Entertainment", "amount": 1875.00, "days_ago": 5},
             # Mid-range (8-20 days ago) — visible in MTD and L30D only
             {"category": "Home", "amount": 14200.00, "days_ago": 10},
-            {"category": "Meals (clients or travel)", "amount": 7246.00, "days_ago": 12},
+            {"category": "Meals (clients or travel)", "amount": 4500.00, "days_ago": 12},
             {"category": "Car & Truck", "amount": 8450.00, "days_ago": 15},
             # Older (21-30 days ago) — visible in L30D only
             {"category": "Personal Care", "amount": 3592.00, "days_ago": 22},
@@ -646,11 +926,11 @@ def get_spending_analysis_data(user_id, time_window="MTD"):
             rows.append({"id": i, "category": m["category"], "amount": m["amount"], "date": dt})
 
     # Convert DictRows to dictionaries
-    df = pd.DataFrame([dict(row) for row in rows])
+    full_df = pd.DataFrame([dict(row) for row in rows])
     
     # Ensure amount is numeric
-    df["amount"] = pd.to_numeric(df["amount"])
-    df["date"] = pd.to_datetime(df["date"])
+    full_df["amount"] = pd.to_numeric(full_df["amount"])
+    full_df["date"] = pd.to_datetime(full_df["date"])
     
     # Apply Time Window Filter
     today = pd.Timestamp.today().normalize()
@@ -663,7 +943,15 @@ def get_spending_analysis_data(user_id, time_window="MTD"):
     else:
         start_date = today.replace(day=1)
         
-    df = df[(df["date"] >= start_date) & (df["date"] <= today)]
+    df = full_df[(full_df["date"] >= start_date) & (full_df["date"] <= today)]
+    
+    # Calculate burn rate metrics and labor equivalency dynamically on the filtered df
+    if is_mock or df.empty:
+        burn_rate_data = calculate_burn_rate_metrics(None)
+        labor_data = calculate_labor_equivalency(None, monthly_salary=monthly_salary)
+    else:
+        burn_rate_data = calculate_burn_rate_metrics(df)
+        labor_data = calculate_labor_equivalency(df, monthly_salary=monthly_salary)
     
     if df.empty:
         return {
@@ -673,7 +961,9 @@ def get_spending_analysis_data(user_id, time_window="MTD"):
             "assist_insights": {
                 "summary": "No spending data available in this time window.",
                 "top_spending": []
-            }
+            },
+            "burn_rate": burn_rate_data,
+            "labor_equivalency": labor_data
         }
     df["amount"] = pd.to_numeric(df["amount"])
     
@@ -712,5 +1002,7 @@ def get_spending_analysis_data(user_id, time_window="MTD"):
         "assist_insights": {
             "summary": summary_text,
             "top_spending": top_spending
-        }
+        },
+        "burn_rate": burn_rate_data,
+        "labor_equivalency": labor_data
     }

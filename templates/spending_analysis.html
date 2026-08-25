@@ -8,26 +8,24 @@
 
 {% block content %}
 
-<!-- Controls Bar -->
-<div class="controls-bar">
-  <div class="controls-left">
-    <select id="time-window-select" class="dropdown-control" style="appearance: none; padding-right: 2.5rem; background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"%23475569\" class=\"bi bi-chevron-down\" viewBox=\"0 0 16 16\"><path fill-rule=\"evenodd\" d=\"M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z\"/></svg>') no-repeat right 0.75rem center/16px 16px;">
-      <option value="MTD">Month To Date</option>
-      <option value="L7D">Last 7 Days</option>
-      <option value="L30D">Last 30 Days</option>
-    </select>
-  </div>
-</div>
-
 <!-- Main Split Layout -->
 <div class="analytics-layout">
   
   <!-- Column 1: Left 70% -->
   <div class="analytics-main">
     <div class="total-expenses-header">
-      <span class="expenses-title">Total expenses</span>
-      <h2 class="expenses-amount" id="val-total-expenses">₹0.00</h2>
-      <span class="expenses-date" id="val-date-range">Loading dates...</span>
+      <div class="header-left">
+        <span class="expenses-title">Total expenses</span>
+        <h2 class="expenses-amount" id="val-total-expenses">₹0.00</h2>
+        <span class="expenses-date" id="val-date-range">Loading dates...</span>
+      </div>
+      <div class="header-right">
+        <select id="time-window-select" class="dropdown-control" style="appearance: none; padding-right: 2.5rem; background: url('data:image/svg+xml;utf8,<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"16\" height=\"16\" fill=\"%23475569\" class=\"bi bi-chevron-down\" viewBox=\"0 0 16 16\"><path fill-rule=\"evenodd\" d=\"M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z\"/></svg>') no-repeat right 0.75rem center/16px 16px;">
+          <option value="MTD">Month To Date</option>
+          <option value="L7D">Last 7 Days</option>
+          <option value="L30D">Last 30 Days</option>
+        </select>
+      </div>
     </div>
 
     <div class="chart-and-legend">
@@ -40,7 +38,89 @@
         </div>
       </div>
     </div>
-  </div>
+
+    <!-- Post Salary Burn Rate Module -->
+    <div class="burn-rate-card">
+      <div class="burn-rate-header">
+        <span class="burn-rate-title">
+          <span class="burn-rate-icon">📉</span> Monthly Salary Cycle & Post-Payday Burn Rate
+        </span>
+      </div>
+
+      <div class="burn-rate-body">
+        <div class="burn-rate-subtitle">Daily Average Burn Rate Across Monthly Phases:</div>
+
+        <!-- Plotly Floating Band Chart -->
+        <div id="plotly-burn-rate-chart" class="burn-chart-plotly-wrapper"></div>
+
+        <!-- Behavioral Alert Callout Box -->
+        <div class="burn-alert-box alert-warning" id="burn-alert-box">
+          <div class="burn-alert-title" id="burn-alert-title">
+            <span class="burn-alert-triangle">▲</span>
+            <span id="burn-alert-heading">Post-Payday Surge Detected:</span>
+          </div>
+          <p class="burn-alert-text" id="burn-alert-p1">
+            Your daily spending in Days 1-10 is <span class="highlight-val" id="burn-multiplier-val">3.0x higher</span> than Month-End.
+          </p>
+          <p class="burn-alert-text" id="burn-alert-p2">
+            <span class="highlight-val" id="burn-percentage-val">54.4%</span> of total monthly expenses occurred in the first 10 days.
+          </p>
+        </div>
+      </div>
+    </div><!-- /.burn-rate-card -->
+
+    <!-- ⏳ Time-to-Earn Labor Equivalency Card -->
+    <div class="labor-card" id="labor-card">
+      <div class="labor-header">
+        <span class="labor-title">
+          <span>⏳</span>
+          Time-to-Earn Labor Equivalency
+          <span class="labor-rate-badge" id="labor-rate-badge">(Based on ₹375/hr • 160 hrs/mo)</span>
+        </span>
+      </div>
+      <div class="labor-body">
+        <div class="labor-columns">
+          <!-- Shopping -->
+          <div class="labor-col">
+            <div class="labor-col-label">🛍️ Shopping</div>
+            <div class="labor-col-amount" id="labor-shop-amount">₹6,000.00</div>
+            <div class="labor-badge-box">
+              <div class="labor-badge-line">🌸 <span id="labor-shop-hrs">16.0</span> hrs of work</div>
+              <div class="labor-badge-subline">(<span id="labor-shop-days">2.0</span> Work Days)</div>
+            </div>
+          </div>
+          <!-- Dining -->
+          <div class="labor-col">
+            <div class="labor-col-label">🍽️ Dining / Meals</div>
+            <div class="labor-col-amount" id="labor-dine-amount">₹4,500.00</div>
+            <div class="labor-badge-box">
+              <div class="labor-badge-line">🌸 <span id="labor-dine-hrs">12.0</span> hrs of work</div>
+              <div class="labor-badge-subline">(<span id="labor-dine-days">1.5</span> Work Days)</div>
+            </div>
+          </div>
+          <!-- Entertainment -->
+          <div class="labor-col">
+            <div class="labor-col-label">🎬 Entertainment</div>
+            <div class="labor-col-amount" id="labor-ent-amount">₹1,875.00</div>
+            <div class="labor-badge-box">
+              <div class="labor-badge-line">🌸 <span id="labor-ent-hrs">5.0</span> hrs of work</div>
+              <div class="labor-badge-subline">(<span id="labor-ent-days">0.6</span> Work Days)</div>
+            </div>
+          </div>
+        </div>
+        <!-- Behavioral Callout -->
+        <div class="labor-callout">
+          💡 <strong>Behavioral Callout:</strong>
+          <span id="labor-callout-text">
+            You worked <strong id="labor-total-hrs">33.0</strong> hours
+            (~<strong id="labor-total-days">4.1</strong> working days) this month
+            solely to fund discretionary lifestyle purchases.
+          </span>
+        </div>
+      </div>
+    </div><!-- /.labor-card -->
+
+  </div><!-- /.analytics-main -->
 
   <!-- Column 2: Right 30% -->
   <div class="analytics-sidebar">

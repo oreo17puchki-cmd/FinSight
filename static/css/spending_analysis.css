@@ -119,6 +119,9 @@ body {
 
 .total-expenses-header {
   margin-bottom: 2rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
 }
 
 .expenses-title {
@@ -264,6 +267,259 @@ body {
   font-size: 0.9rem;
 }
 
+/* Post Salary Burn Rate Styles */
+.burn-rate-card {
+  margin-top: 2.5rem;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  padding: 24px 28px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.02);
+  font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.burn-rate-header {
+  border-bottom: 1px solid #e5e7eb;
+  padding-bottom: 12px;
+  margin-bottom: 22px;
+}
+
+.burn-rate-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #1e293b;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.burn-rate-subtitle {
+  font-size: 15px;
+  color: #1e293b;
+  font-weight: 500;
+  margin-bottom: 20px;
+}
+
+.burn-chart-plotly-wrapper {
+  width: 100%;
+  min-height: 340px;
+  margin-bottom: 6px;
+}
+
+.svg-axis-label {
+  font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13.5px;
+  fill: #1e293b;
+  font-weight: 500;
+}
+
+.svg-axis-label.zero-label {
+  fill: #94a3b8;
+}
+
+.svg-x-title {
+  font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  fill: #1e293b;
+}
+
+.svg-x-sub {
+  font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+  font-size: 12.5px;
+  fill: #475569;
+}
+
+.burn-alert-box {
+  margin-top: 26px;
+  border-radius: 6px;
+  padding: 18px 22px;
+  border: 1px solid #e0d4d4;
+  background-color: #faf5f5;
+  transition: all 0.3s ease;
+}
+
+.burn-alert-box.alert-warning {
+  border-color: #e0d4d4;
+  background-color: #faf5f5;
+}
+
+.burn-alert-box.alert-info {
+  border-color: #bfdbfe;
+  background-color: #eff6ff;
+}
+
+.burn-alert-box.alert-success {
+  border-color: #bbf7d0;
+  background-color: #f0fdf4;
+}
+
+.burn-alert-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #8b1538;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.burn-alert-triangle {
+  color: #8b1538;
+  font-size: 13px;
+}
+
+.burn-alert-box.alert-info .burn-alert-title,
+.burn-alert-box.alert-info .burn-alert-triangle {
+  color: #1d4ed8;
+}
+
+.burn-alert-box.alert-success .burn-alert-title,
+.burn-alert-box.alert-success .burn-alert-triangle {
+  color: #15803d;
+}
+
+.burn-alert-text {
+  margin: 0 0 6px 0;
+  font-size: 14px;
+  color: #334155;
+  line-height: 1.5;
+}
+
+.burn-alert-text:last-child {
+  margin-bottom: 0;
+}
+
+.highlight-val {
+  color: #8b1538;
+  font-weight: 700;
+}
+
+.alert-info .highlight-val {
+  color: #1d4ed8;
+}
+
+.alert-success .highlight-val {
+  color: #15803d;
+}
+
+/* ⏳ Time-to-Earn Labor Equivalency Card */
+.labor-card {
+  margin-top: 2.5rem;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  padding: 22px 28px;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  font-family: 'Manrope', 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+.labor-header {
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  margin-bottom: 20px;
+}
+
+.labor-title {
+  font-size: 22px;
+  font-weight: 600;
+  color: #0f172a;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.labor-rate-badge {
+  font-size: 13px;
+  font-weight: 400;
+  color: #64748b;
+}
+
+.labor-columns {
+  display: flex;
+  gap: 18px;
+  margin-bottom: 20px;
+}
+
+.labor-col {
+  flex: 1;
+  min-width: 0;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+.labor-col:hover {
+  background-color: #f8fafc;
+  border-color: #e2e8f0;
+  transform: translateY(-4px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+}
+
+.labor-col-label {
+  font-size: 14px;
+  color: #475569;
+  margin-bottom: 6px;
+  font-weight: 500;
+}
+
+.labor-col-amount {
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 10px;
+}
+
+.labor-badge-box {
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  padding: 8px 12px;
+  font-size: 12.5px;
+  color: #1e293b;
+  line-height: 1.6;
+  background: #ffffff;
+  transition: all 0.3s ease;
+}
+
+.labor-col:hover .labor-badge-box {
+  border-color: #6366f1;
+  background-color: #f5f3ff;
+}
+
+.labor-badge-line {
+  font-weight: 600;
+}
+
+.labor-badge-subline {
+  color: #64748b;
+}
+
+.labor-callout {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  border-radius: 8px;
+  padding: 14px 18px;
+  font-size: 13.5px;
+  color: #1e293b;
+  line-height: 1.6;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  cursor: default;
+}
+
+.labor-callout:hover {
+  background: #ecfdf5;
+  border-color: #86efac;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(22, 101, 52, 0.04);
+}
+
+.labor-callout strong {
+  color: #166534;
+}
+
 /* Responsive adjustments */
 @media (max-width: 1024px) {
   .analytics-layout {
@@ -282,4 +538,20 @@ body {
   .legend-grid {
     grid-template-columns: 1fr;
   }
+  .burn-y-axis {
+    width: 90px;
+  }
+  .burn-x-axis {
+    margin-left: 90px;
+  }
+  .burn-y-label {
+    font-size: 0.78rem;
+  }
+  .burn-x-title {
+    font-size: 0.78rem;
+  }
+  .burn-x-sub {
+    font-size: 0.72rem;
+  }
 }
+
